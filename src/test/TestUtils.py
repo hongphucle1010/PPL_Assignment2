@@ -87,20 +87,31 @@ class TestParser:
 class TestAST:
     @staticmethod
     def checkASTGen(input,expect,num):
-        inputfile = TestUtil.makeSource(input,num)
-        dest = open("./test/solutions/" + str(num) + ".txt","w")
-        lexer = MiniGoLexer(inputfile)
-        tokens = CommonTokenStream(lexer)
-        parser = MiniGoParser(tokens)
-        tree = parser.program()
-        asttree = ASTGeneration().visit(tree)
-        dest.write(str(asttree))
-        dest.close()
-        # Writing expected output to file
-        dest = open("./test/expects/" + str(num) + ".txt","w")
-        dest.write(expect)
-        dest.close()
-        dest = open("./test/solutions/" + str(num) + ".txt","r")
-        line = dest.read()
-        return line == expect
+        try:
+            inputfile = TestUtil.makeSource(input,num)
+            dest = open("./test/solutions/" + str(num) + ".txt","w")
+            lexer = MiniGoLexer(inputfile)
+            tokens = CommonTokenStream(lexer)
+            parser = MiniGoParser(tokens)
+            tree = parser.program()
+            asttree = ASTGeneration().visit(tree)
+            dest.write(str(asttree))
+            dest.close()
+            # Writing expected output to file
+            dest = open("./test/expects/" + str(num) + ".txt","w")
+            dest.write(expect)
+            dest.close()
+            dest = open("./test/solutions/" + str(num) + ".txt","r")
+            line = dest.read()
+            # Writing failed testcases to file ./test/results.txt
+            if line != expect:
+                dest = open("./test/results.txt","a")
+                dest.write("Testcase " + str(num) + " failed\n")
+                dest.close()
+            return line == expect
+        except Exception as e:
+            # Writing failed testcases to file ./test/results.txt
+            dest = open("./test/results.txt","a")
+            dest.write("Testcase " + str(num) + " errors\n")
+            dest.close()
         
