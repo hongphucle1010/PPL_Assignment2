@@ -3,3 +3,4 @@ target/
 .vscode/
 src/test/solutions/
 src/test/testcases/
+src/test/expects/

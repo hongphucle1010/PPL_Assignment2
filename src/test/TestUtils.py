@@ -96,6 +96,10 @@ class TestAST:
         asttree = ASTGeneration().visit(tree)
         dest.write(str(asttree))
         dest.close()
+        # Writing expected output to file
+        dest = open("./test/expects/" + str(num) + ".txt","w")
+        dest.write(expect)
+        dest.close()
         dest = open("./test/solutions/" + str(num) + ".txt","r")
         line = dest.read()
         return line == expect

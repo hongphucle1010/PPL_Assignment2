@@ -532,7 +532,7 @@ class ParserSuite(unittest.TestCase):
         expect = "Error on line 1 col 13: ="
         self.assertTrue(TestParser.checkParser(input, expect, 284))
 
-    #! ------------------- Statement 7 ------------------- !
+    #! ------------------- Statement ------------------- !
     def test_declaration_statement(self):
         """Variable declaration statement"""
         input = """func main() {var a int;};"""
