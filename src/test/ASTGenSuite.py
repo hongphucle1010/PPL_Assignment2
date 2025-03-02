@@ -1300,5 +1300,27 @@ class ASTGenSuite(unittest.TestCase):
     def test_unary_expression_2(self):
         """Expression with ! and -"""
         input = """const a = !-b;"""
-        expect = str(Program([ConstDecl("a", None, UnaryOp("!", UnaryOp("-", Id("b"))))]))
+        expect = str(
+            Program([ConstDecl("a", None, UnaryOp("!", UnaryOp("-", Id("b"))))])
+        )
         self.assertTrue(TestAST.checkASTGen(input, expect, 387))
+
+    def test_array_literal_with_constant(self):
+        """The array contain an Id"""
+        input = """const a = [3]int{b, 2, 3};"""
+        expect = str(
+            Program(
+                [
+                    ConstDecl(
+                        "a",
+                        None,
+                        ArrayLiteral(
+                            [IntLiteral(3)],
+                            IntType(),
+                            [Id("b"), IntLiteral(2), IntLiteral(3)],
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 388))
