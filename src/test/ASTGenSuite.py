@@ -31,7 +31,10 @@ class ASTGenSuite(unittest.TestCase):
                         None,
                         StructLiteral(
                             "Person",
-                            [("name", StringLiteral("name")), ("age", IntLiteral(20))],
+                            [
+                                ("name", StringLiteral('"name"')),
+                                ("age", IntLiteral(20)),
+                            ],
                         ),
                     )
                 ]
@@ -54,7 +57,10 @@ class ASTGenSuite(unittest.TestCase):
                         None,
                         StructLiteral(
                             "Person",
-                            [("name", StringLiteral("name")), ("age", IntLiteral(20))],
+                            [
+                                ("name", StringLiteral('"name"')),
+                                ("age", IntLiteral(20)),
+                            ],
                         ),
                     )
                 ]
@@ -341,7 +347,7 @@ class ASTGenSuite(unittest.TestCase):
 
     def test_string_literal(self):
         input = """const a = "Hello";"""
-        expect = str(Program([ConstDecl("a", None, StringLiteral("Hello"))]))
+        expect = str(Program([ConstDecl("a", None, StringLiteral('"Hello"'))]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 326))
 
     def test_array_literal(self):
@@ -396,7 +402,10 @@ class ASTGenSuite(unittest.TestCase):
                         None,
                         StructLiteral(
                             "Person",
-                            [("name", StringLiteral("name")), ("age", IntLiteral(20))],
+                            [
+                                ("name", StringLiteral('"name"')),
+                                ("age", IntLiteral(20)),
+                            ],
                         ),
                     )
                 ]
@@ -474,7 +483,7 @@ class ASTGenSuite(unittest.TestCase):
         expect = str(Program([ConstDecl("a", None, MethCall(Id("b"), "foo", []))]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 338))
 
-    def test_unary_expression(self):
+    def test_unary_expression_0(self):
         input = """const a = -b;"""
         expect = str(Program([ConstDecl("a", None, UnaryOp("-", Id("b")))]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 339))
@@ -553,7 +562,7 @@ class ASTGenSuite(unittest.TestCase):
                         "main",
                         [],
                         VoidType(),
-                        Block([FuncCall("say", [StringLiteral("Hello, world!")])]),
+                        Block([FuncCall("say", [StringLiteral('"Hello, world!"')])]),
                     )
                 ]
             )
@@ -1324,3 +1333,475 @@ class ASTGenSuite(unittest.TestCase):
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 388))
+
+    def test_complex_1(self):
+        input = """
+            var x = 10;
+            const y = 5;
+            type Alpha struct{value float;}
+            type Beta interface {process();} 
+            func bar(){return;}
+            func  (Dog d) process() [3]int {return;}
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl("x", None, IntLiteral(10)),
+                    ConstDecl("y", None, IntLiteral(5)),
+                    StructType("Alpha", [("value", FloatType())], []),
+                    InterfaceType("Beta", [Prototype("process", [], VoidType())]),
+                    FuncDecl("bar", [], VoidType(), Block([Return(None)])),
+                    MethodDecl(
+                        "Dog",
+                        Id("d"),
+                        FuncDecl(
+                            "process",
+                            [],
+                            ArrayType([IntLiteral(3)], IntType()),
+                            Block([Return(None)]),
+                        ),
+                    ),
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 389))
+
+    def test_complex_2(self):
+        input = """
+            func compute(x,y,z,w [ITEM][3][z] ITEM ){return;}
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "compute",
+                        [
+                            ParamDecl(
+                                "x",
+                                ArrayType(
+                                    [Id("ITEM"), IntLiteral(3), Id("z")], Id("ITEM")
+                                ),
+                            ),
+                            ParamDecl(
+                                "y",
+                                ArrayType(
+                                    [Id("ITEM"), IntLiteral(3), Id("z")], Id("ITEM")
+                                ),
+                            ),
+                            ParamDecl(
+                                "z",
+                                ArrayType(
+                                    [Id("ITEM"), IntLiteral(3), Id("z")], Id("ITEM")
+                                ),
+                            ),
+                            ParamDecl(
+                                "w",
+                                ArrayType(
+                                    [Id("ITEM"), IntLiteral(3), Id("z")], Id("ITEM")
+                                ),
+                            ),
+                        ],
+                        VoidType(),
+                        Block([Return(None)]),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 390))
+
+    def test_complex_3(self):
+        input = """
+            func check(){
+                if(10) {
+                    return 100;
+                }else if(20) {
+                    return 200;
+                } else if(30) {
+                    return 300;
+                } else if(40) {
+                    return 400;
+                } 
+
+            } 
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "check",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                If(
+                                    IntLiteral(10),
+                                    Block([Return(IntLiteral(100))]),
+                                    If(
+                                        IntLiteral(20),
+                                        Block([Return(IntLiteral(200))]),
+                                        If(
+                                            IntLiteral(30),
+                                            Block([Return(IntLiteral(300))]),
+                                            If(
+                                                IntLiteral(40),
+                                                Block([Return(IntLiteral(400))]),
+                                                None,
+                                            ),
+                                        ),
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 391))
+
+    def test_complex_4(self):
+        input = """
+            func iterate() {
+                for data.idx[5] {
+                    return;
+                    return 5;
+                }
+                for j := 1; j[2] < 20; j += 3+4 {
+                    return;
+                    return 7;
+                }
+            }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "iterate",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                ForBasic(
+                                    ArrayCell(
+                                        FieldAccess(Id("data"), "idx"), [IntLiteral(5)]
+                                    ),
+                                    Block([Return(None), Return(IntLiteral(5))]),
+                                ),
+                                ForStep(
+                                    Assign(Id("j"), IntLiteral(1)),
+                                    BinaryOp(
+                                        "<",
+                                        ArrayCell(Id("j"), [IntLiteral(2)]),
+                                        IntLiteral(20),
+                                    ),
+                                    Assign(
+                                        Id("j"),
+                                        BinaryOp(
+                                            "+",
+                                            Id("j"),
+                                            BinaryOp("+", IntLiteral(3), IntLiteral(4)),
+                                        ),
+                                    ),
+                                    Block([Return(None), Return(IntLiteral(7))]),
+                                ),
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 392))
+
+    def test_complex_5(self):
+        input = """
+            func iterate() {
+                for idx, val := range [3]int{10,20,30} {
+                    return;
+                    return 15;
+                }
+            }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "iterate",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                ForEach(
+                                    Id("idx"),
+                                    Id("val"),
+                                    ArrayLiteral(
+                                        [IntLiteral(3)],
+                                        IntType(),
+                                        [
+                                            IntLiteral(10),
+                                            IntLiteral(20),
+                                            IntLiteral(30),
+                                        ],
+                                    ),
+                                    Block([Return(None), Return(IntLiteral(15))]),
+                                )
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 393))
+
+    def test_complex_6(self):
+        input = """
+            func process() {
+                x.y.z[3].funcCall()
+            }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "process",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                MethCall(
+                                    ArrayCell(
+                                        FieldAccess(FieldAccess(Id("x"), "y"), "z"),
+                                        [IntLiteral(3)],
+                                    ),
+                                    "funcCall",
+                                    [],
+                                )
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 394))
+
+    def test_for_loop_with_scalar_variant(self):
+        input = """func execute() {for j := 5; j <= 20; j+=2 {b := j;}
+        };"""
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "execute",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                ForStep(
+                                    Assign(Id("j"), IntLiteral(5)),
+                                    BinaryOp("<=", Id("j"), IntLiteral(20)),
+                                    Assign(
+                                        Id("j"), BinaryOp("+", Id("j"), IntLiteral(2))
+                                    ),
+                                    Block([Assign(Id("b"), Id("j"))]),
+                                )
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 395))
+
+    def test_396(self):
+        input = """
+        func compute () {
+            var x int = 5;
+            var x float = 3.14;
+            var x boolean;
+            var x string = "hello";
+            var x = 42;
+            var x TYPE = 7;
+            var x [TYPE][2] float = 8.5;
+            const x = 99;
+        }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "compute",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                VarDecl("x", IntType(), IntLiteral(5)),
+                                VarDecl("x", FloatType(), FloatLiteral(3.14)),
+                                VarDecl("x", BoolType(), None),
+                                VarDecl("x", StringType(), StringLiteral('"hello"')),
+                                VarDecl("x", None, IntLiteral(42)),
+                                VarDecl("x", Id("TYPE"), IntLiteral(7)),
+                                VarDecl(
+                                    "x",
+                                    ArrayType([Id("TYPE"), IntLiteral(2)], FloatType()),
+                                    FloatLiteral(8.5),
+                                ),
+                                ConstDecl("x", None, IntLiteral(99)),
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 396))
+
+    def test_397(self):
+        input = """
+        func compute () {
+            y := 10;
+            y += 2;
+            y -= 3;
+            y *= 4;
+            y /= 5;
+            y %= 6;
+        }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "compute",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                Assign(Id("y"), IntLiteral(10)),
+                                Assign(Id("y"), BinaryOp("+", Id("y"), IntLiteral(2))),
+                                Assign(Id("y"), BinaryOp("-", Id("y"), IntLiteral(3))),
+                                Assign(Id("y"), BinaryOp("*", Id("y"), IntLiteral(4))),
+                                Assign(Id("y"), BinaryOp("/", Id("y"), IntLiteral(5))),
+                                Assign(Id("y"), BinaryOp("%", Id("y"), IntLiteral(6))),
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 397))
+
+    def test_398(self):
+        input = """
+        func modify () {
+            z[0] := 5;
+            z[3][2+2] += 7;
+            obj.attr -= 9;
+            d.e[f + g].h.i[4] := 6;
+        }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "modify",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                Assign(
+                                    ArrayCell(Id("z"), [IntLiteral(0)]), IntLiteral(5)
+                                ),
+                                Assign(
+                                    ArrayCell(
+                                        Id("z"),
+                                        [
+                                            IntLiteral(3),
+                                            BinaryOp("+", IntLiteral(2), IntLiteral(2)),
+                                        ],
+                                    ),
+                                    BinaryOp(
+                                        "+",
+                                        ArrayCell(
+                                            Id("z"),
+                                            [
+                                                IntLiteral(3),
+                                                BinaryOp(
+                                                    "+", IntLiteral(2), IntLiteral(2)
+                                                ),
+                                            ],
+                                        ),
+                                        IntLiteral(7),
+                                    ),
+                                ),
+                                Assign(
+                                    FieldAccess(Id("obj"), "attr"),
+                                    BinaryOp(
+                                        "-",
+                                        FieldAccess(Id("obj"), "attr"),
+                                        IntLiteral(9),
+                                    ),
+                                ),
+                                Assign(
+                                    ArrayCell(
+                                        FieldAccess(
+                                            FieldAccess(
+                                                ArrayCell(
+                                                    FieldAccess(Id("d"), "e"),
+                                                    [BinaryOp("+", Id("f"), Id("g"))],
+                                                ),
+                                                "h",
+                                            ),
+                                            "i",
+                                        ),
+                                        [IntLiteral(4)],
+                                    ),
+                                    IntLiteral(6),
+                                ),
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 398))
+
+    def test_399(self):
+        input = """
+        func invoke () {
+            call();
+            call(10, 20);
+            call(15);
+            obj.method();
+            obj.method(5, 10);
+            obj.method(8);
+        }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        "invoke",
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                FuncCall("call", []),
+                                FuncCall("call", [IntLiteral(10), IntLiteral(20)]),
+                                FuncCall("call", [IntLiteral(15)]),
+                                MethCall(Id("obj"), "method", []),
+                                MethCall(
+                                    Id("obj"), "method", [IntLiteral(5), IntLiteral(10)]
+                                ),
+                                MethCall(Id("obj"), "method", [IntLiteral(8)]),
+                            ]
+                        ),
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 399))
+
+    def test_400(self):
+        input = """const this_is_my_final_test = "A+ PPL";"""
+        expect = str(
+            Program(
+                [ConstDecl("this_is_my_final_test", None, StringLiteral('"A+ PPL"'))]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 400))
