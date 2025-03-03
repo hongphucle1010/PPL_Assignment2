@@ -465,7 +465,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitContinueStmt(self, ctx: MiniGoParser.ContinueStmtContext) -> Continue:
         return Continue()
     
-    def visitCallStmt(self, ctx: MiniGoParser.CallStmtContext) -> FuncCall | MethCall:
+    def visitCallStmt(self, ctx: MiniGoParser.CallStmtContext):
         if ctx.methodCall():
             return self.visit(ctx.methodCall())
         return self.visit(ctx.funcCall())
