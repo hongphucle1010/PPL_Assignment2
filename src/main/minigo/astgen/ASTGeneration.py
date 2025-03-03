@@ -13,13 +13,14 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.arrayLiteral():
             return self.visitArrayLiteral(ctx.arrayLiteral())
         assert False, "This should not be literal"
+
     def visitNotArrayLiteral(self, ctx: MiniGoParser.NotArrayLiteralContext) -> Literal:
         if ctx.integer():
             return self.visitInteger(ctx.integer())
         if ctx.FLOAT_LIT():
             return FloatLiteral(float(ctx.FLOAT_LIT().getText()))
         if ctx.STR_LIT():
-            return StringLiteral(ctx.STR_LIT().getText()[1:-1])
+            return StringLiteral(ctx.STR_LIT().getText())
         if ctx.TRUE() or ctx.FALSE():
             return BooleanLiteral(ctx.TRUE() != None)
         if ctx.NIL():
